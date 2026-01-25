@@ -1,17 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { createClient } from '@/lib/supabase/client';
 import type { CreateMeetingInput } from '@/types/database';
+import type { User } from '@supabase/supabase-js';
 
 export default function NewMeetingPage() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateMeetingInput>({
     book_title: '',
     book_author: '',
@@ -24,6 +29,23 @@ export default function NewMeetingPage() {
     meeting_link: '',
   });
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/login?redirect=/meetings/new');
+        return;
+      }
+
+      setUser(user);
+      setIsCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, [router]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     setFormData((prev) => ({
@@ -34,15 +56,59 @@ export default function NewMeetingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+
     setIsLoading(true);
+    setError(null);
 
-    // TODO: Implement create meeting logic with Supabase
-    console.log('Creating meeting:', formData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const supabase = createClient();
 
-    setIsLoading(false);
-    router.push('/');
+    // datetime-local 값을 ISO 문자열로 변환
+    const meetingDate = new Date(formData.meeting_date).toISOString();
+
+    const insertData = {
+      leader_id: user.id,
+      book_title: formData.book_title,
+      book_author: formData.book_author,
+      book_cover_url: formData.book_cover_url || null,
+      book_description: formData.book_description || null,
+      reading_range: formData.reading_range,
+      meeting_date: meetingDate,
+      duration_minutes: formData.duration_minutes,
+      max_participants: formData.max_participants,
+      meeting_link: formData.meeting_link,
+      status: 'recruiting',
+    };
+
+    const { data, error } = await supabase
+      .from('meetings')
+      .insert(insertData as never)
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Error creating meeting:', error);
+      setError('모임 개설에 실패했습니다. 다시 시도해주세요.');
+      setIsLoading(false);
+      return;
+    }
+
+    // 성공 시 생성된 모임 상세 페이지로 이동
+    const newMeeting = data as { id: string };
+    router.push(`/meetings/${newMeeting.id}`);
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center text-gray-500">로그인 확인 중...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -54,6 +120,12 @@ export default function NewMeetingPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="mb-6 p-3 text-sm text-red-600 bg-red-50 rounded-md">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 책 정보 섹션 */}
             <div className="space-y-4">
@@ -132,6 +204,7 @@ export default function NewMeetingPage() {
                   type="datetime-local"
                   value={formData.meeting_date}
                   onChange={handleChange}
+                  min={new Date().toISOString().slice(0, 16)}
                   required
                 />
               </div>
