@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,10 +14,13 @@ import type { User } from '@supabase/supabase-js';
 
 export default function NewMeetingPage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [formData, setFormData] = useState<CreateMeetingInput>({
     book_title: '',
     book_author: '',
@@ -54,6 +58,33 @@ export default function NewMeetingPage() {
     }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // 파일 크기 제한 (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('이미지 파일은 5MB 이하만 업로드 가능합니다.');
+        return;
+      }
+      // 이미지 파일만 허용
+      if (!file.type.startsWith('image/')) {
+        setError('이미지 파일만 업로드 가능합니다.');
+        return;
+      }
+      setCoverFile(file);
+      setCoverPreview(URL.createObjectURL(file));
+      setError(null);
+    }
+  };
+
+  const removeCoverImage = () => {
+    setCoverFile(null);
+    setCoverPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -63,6 +94,32 @@ export default function NewMeetingPage() {
 
     const supabase = createClient();
 
+    let coverUrl: string | null = null;
+
+    // 이미지 파일이 있으면 Supabase Storage에 업로드
+    if (coverFile) {
+      const fileExt = coverFile.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('book-covers')
+        .upload(fileName, coverFile);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        setError('이미지 업로드에 실패했습니다. 다시 시도해주세요.');
+        setIsLoading(false);
+        return;
+      }
+
+      // 업로드된 이미지의 공개 URL 가져오기
+      const { data: urlData } = supabase.storage
+        .from('book-covers')
+        .getPublicUrl(fileName);
+
+      coverUrl = urlData.publicUrl;
+    }
+
     // datetime-local 값을 ISO 문자열로 변환
     const meetingDate = new Date(formData.meeting_date).toISOString();
 
@@ -70,7 +127,7 @@ export default function NewMeetingPage() {
       leader_id: user.id,
       book_title: formData.book_title,
       book_author: formData.book_author,
-      book_cover_url: formData.book_cover_url || null,
+      book_cover_url: coverUrl,
       book_description: formData.book_description || null,
       reading_range: formData.reading_range,
       meeting_date: meetingDate,
@@ -156,15 +213,47 @@ export default function NewMeetingPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="book_cover_url">책 표지 이미지 URL (선택)</Label>
-                <Input
-                  id="book_cover_url"
-                  name="book_cover_url"
-                  type="url"
-                  value={formData.book_cover_url}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                />
+                <Label htmlFor="book_cover">책 표지 이미지 (선택)</Label>
+                <div className="flex flex-col gap-3">
+                  {coverPreview ? (
+                    <div className="relative w-32 h-44 rounded-lg overflow-hidden border">
+                      <Image
+                        src={coverPreview}
+                        alt="책 표지 미리보기"
+                        fill
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeCoverImage}
+                        className="absolute top-1 right-1 w-6 h-6 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white text-sm"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-32 h-44 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                    >
+                      <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <span className="text-sm text-gray-500">이미지 추가</span>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    id="book_cover"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <p className="text-sm text-gray-500">
+                    5MB 이하의 이미지 파일을 업로드해주세요.
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">
