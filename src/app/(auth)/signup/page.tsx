@@ -9,34 +9,57 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createClient } from '@/lib/supabase/client';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [nickname, setNickname] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message === 'Invalid login credentials'
-        ? '이메일 또는 비밀번호가 올바르지 않습니다.'
-        : error.message);
+    if (password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.');
       setIsLoading(false);
       return;
     }
 
-    router.push('/');
-    router.refresh();
+    if (password.length < 6) {
+      setError('비밀번호는 6자 이상이어야 합니다.');
+      setIsLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nickname,
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        setError('이미 가입된 이메일입니다.');
+      } else {
+        setError(error.message);
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    setSuccess(true);
+    setIsLoading(false);
   };
 
   const handleGoogleLogin = async () => {
@@ -49,12 +72,36 @@ export default function LoginPage() {
     });
   };
 
+  if (success) {
+    return (
+      <div className="container mx-auto px-4 py-16 max-w-md">
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">이메일을 확인해주세요</CardTitle>
+            <CardDescription>
+              {email}로 인증 메일을 보냈습니다.
+              <br />
+              메일의 링크를 클릭하면 가입이 완료됩니다.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/login">
+              <Button variant="outline" className="w-full">
+                로그인 페이지로 돌아가기
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-16 max-w-md">
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">로그인</CardTitle>
-          <CardDescription>Page Turner에 오신 것을 환영합니다</CardDescription>
+          <CardTitle className="text-2xl">회원가입</CardTitle>
+          <CardDescription>Page Turner에 가입하고 낭독 모임에 참여하세요</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
@@ -89,7 +136,7 @@ export default function LoginPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Google로 계속하기
+              Google로 가입하기
             </Button>
           </div>
 
@@ -102,8 +149,21 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* 이메일 로그인 폼 */}
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          {/* 이메일 회원가입 폼 */}
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="nickname">닉네임</Label>
+              <Input
+                id="nickname"
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="낭독왕"
+                required
+                minLength={2}
+                maxLength={20}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">이메일</Label>
               <Input
@@ -126,16 +186,29 @@ export default function LoginPage() {
                 required
                 minLength={6}
               />
+              <p className="text-xs text-gray-500">6자 이상 입력해주세요</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">비밀번호 확인</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? '로그인 중...' : '로그인'}
+              {isLoading ? '가입 중...' : '회원가입'}
             </Button>
           </form>
 
           <p className="text-center text-sm text-gray-600">
-            아직 회원이 아니신가요?{' '}
-            <Link href="/signup" className="text-primary hover:underline">
-              회원가입
+            이미 회원이신가요?{' '}
+            <Link href="/login" className="text-primary hover:underline">
+              로그인
             </Link>
           </p>
         </CardContent>
