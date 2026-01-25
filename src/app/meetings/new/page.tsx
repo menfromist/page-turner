@@ -58,6 +58,16 @@ export default function NewMeetingPage() {
     }));
   };
 
+  // Jitsi Meet 링크 자동 생성 함수
+  const generateJitsiLink = () => {
+    const randomId = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+    const jitsiLink = `https://meet.jit.si/PageTurner-${randomId}`;
+    setFormData((prev) => ({
+      ...prev,
+      meeting_link: jitsiLink,
+    }));
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -328,17 +338,28 @@ export default function NewMeetingPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="meeting_link">화상 회의 링크 *</Label>
-                <Input
-                  id="meeting_link"
-                  name="meeting_link"
-                  type="url"
-                  value={formData.meeting_link}
-                  onChange={handleChange}
-                  placeholder="Zoom 또는 Google Meet 링크"
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="meeting_link"
+                    name="meeting_link"
+                    type="url"
+                    value={formData.meeting_link}
+                    onChange={handleChange}
+                    placeholder="Zoom, Google Meet 또는 Jitsi 링크"
+                    required
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateJitsiLink}
+                    className="whitespace-nowrap"
+                  >
+                    Jitsi 링크 자동 생성
+                  </Button>
+                </div>
                 <p className="text-sm text-gray-500">
-                  Zoom, Google Meet 등 화상 회의 링크를 입력해주세요.
+                  직접 입력하거나, Jitsi 링크 자동 생성 버튼을 클릭하세요.
                 </p>
               </div>
             </div>
