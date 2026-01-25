@@ -107,15 +107,17 @@ export function Header() {
                   </Button>
                 </Link>
                 <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-4 border-l border-border/50">
-                  <Avatar className="h-8 w-8 ring-2 ring-primary/10">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
-                      {nickname.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium hidden md:inline max-w-[100px] truncate">
-                    {nickname}
-                  </span>
+                  <Link href="/mypage" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                    <Avatar className="h-8 w-8 ring-2 ring-primary/10">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                        {nickname.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium hidden md:inline max-w-[100px] truncate">
+                      {nickname}
+                    </span>
+                  </Link>
                   <Button
                     variant="ghost"
                     size="sm"
