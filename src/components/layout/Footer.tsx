@@ -9,10 +9,10 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold text-foreground mb-3">
               <span className="text-xl">📖</span>
-              Page Turner
+              쪽GO
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              함께 읽고, 함께 나누는
+              한 쪽 읽기, GO 해봅시다
               <br />
               온라인 낭독 독서 모임
             </p>
@@ -56,7 +56,7 @@ export function Footer() {
             <ul className="space-y-2">
               <li>
                 <span className="text-sm text-muted-foreground">
-                  문의: hello@pageturner.kr
+                  문의: hello@pagego.kr
                 </span>
               </li>
             </ul>
@@ -66,7 +66,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Page Turner. All rights reserved.
+            &copy; {new Date().getFullYear()} 쪽GO (PageGO). All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">

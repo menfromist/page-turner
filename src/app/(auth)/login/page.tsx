@@ -54,7 +54,7 @@ export default function LoginPage() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">로그인</CardTitle>
-          <CardDescription>Page Turner에 오신 것을 환영합니다</CardDescription>
+          <CardDescription>쪽GO에 오신 것을 환영합니다</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (

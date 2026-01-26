@@ -56,7 +56,7 @@ export function Header() {
             className="flex items-center gap-2 text-xl font-bold text-foreground hover:text-primary transition-colors"
           >
             <span className="text-2xl">📖</span>
-            <span className="hidden sm:inline">Page Turner</span>
+            <span className="hidden sm:inline">쪽GO</span>
           </Link>
 
           {/* Navigation */}

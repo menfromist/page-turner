@@ -87,10 +87,8 @@ export default async function HomePage() {
 
             {/* Headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">
-              함께 읽고,{' '}
-              <span className="text-primary">함께 나누는</span>
-              <br />
-              새로운 독서 경험
+              한 쪽 읽기,{' '}
+              <span className="text-primary">GO 해봅시다</span>
             </h1>
 
             {/* Subheadline */}

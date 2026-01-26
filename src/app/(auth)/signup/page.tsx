@@ -101,7 +101,7 @@ export default function SignupPage() {
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">회원가입</CardTitle>
-          <CardDescription>Page Turner에 가입하고 낭독 모임에 참여하세요</CardDescription>
+          <CardDescription>쪽GO에 가입하고 낭독 모임에 참여하세요</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {error && (
