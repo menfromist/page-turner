@@ -9,7 +9,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold text-foreground mb-3">
               <span className="text-xl">📖</span>
-              쪽GO
+              쪽GO🍫
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
               한 쪽 읽기, GO 해봅시다
@@ -66,7 +66,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-10 pt-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} 쪽GO (PageGO). All rights reserved.
+            &copy; {new Date().getFullYear()} 쪽GO🍫 All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link href="#" className="text-muted-foreground hover:text-foreground transition-colors">
