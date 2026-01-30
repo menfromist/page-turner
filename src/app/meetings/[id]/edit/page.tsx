@@ -37,6 +37,7 @@ export default function EditMeetingPage({
     duration_minutes: 60,
     max_participants: 6,
     meeting_link: '',
+    meeting_password: '',
   });
 
   useEffect(() => {
@@ -99,6 +100,7 @@ export default function EditMeetingPage({
         duration_minutes: meetingResult.duration_minutes,
         max_participants: meetingResult.max_participants,
         meeting_link: meetingResult.meeting_link,
+        meeting_password: meetingResult.meeting_password || '',
       });
 
       if (meetingResult.book_cover_url) {
@@ -119,12 +121,23 @@ export default function EditMeetingPage({
     }));
   };
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 6; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
   const generateJitsiLink = () => {
     const randomId = Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     const jitsiLink = `https://meet.jit.si/PageTurner-${randomId}`;
+    const password = generatePassword();
     setFormData((prev) => ({
       ...prev,
       meeting_link: jitsiLink,
+      meeting_password: password,
     }));
   };
 
@@ -200,6 +213,7 @@ export default function EditMeetingPage({
       duration_minutes: formData.duration_minutes,
       max_participants: formData.max_participants,
       meeting_link: formData.meeting_link,
+      meeting_password: formData.meeting_password || null,
     };
 
     const { error } = await supabase
@@ -426,6 +440,32 @@ export default function EditMeetingPage({
                   직접 입력하거나, Jitsi 링크 자동 생성 버튼을 클릭하세요.
                 </p>
               </div>
+
+              {formData.meeting_password && (
+                <div className="space-y-2">
+                  <Label htmlFor="meeting_password">회의 비밀번호</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="meeting_password"
+                      name="meeting_password"
+                      value={formData.meeting_password}
+                      onChange={handleChange}
+                      className="flex-1 font-mono"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setFormData((prev) => ({ ...prev, meeting_password: generatePassword() }))}
+                      className="whitespace-nowrap"
+                    >
+                      재생성
+                    </Button>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    참가자에게 이 비밀번호가 함께 안내됩니다.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3">

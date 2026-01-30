@@ -28,6 +28,7 @@ export interface Meeting {
   duration_minutes: number;
   max_participants: number;
   meeting_link: string;
+  meeting_password: string | null;
 
   // 상태
   status: 'recruiting' | 'closed' | 'completed' | 'cancelled';
@@ -64,6 +65,7 @@ export interface CreateMeetingInput {
   duration_minutes: number;
   max_participants: number;
   meeting_link: string;
+  meeting_password?: string;
 }
 
 export interface UpdateMeetingInput extends Partial<CreateMeetingInput> {

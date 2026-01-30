@@ -235,14 +235,25 @@ export function MeetingDetail({ meeting, userId, isParticipant, isLeader }: Meet
               <CardContent className="pt-6">
                 <p className="text-blue-800 font-medium mb-2">내가 개설한 모임입니다</p>
                 <p className="text-sm text-gray-600 mb-4">모임 당일 아래 링크로 입장하세요.</p>
-                <a
-                  href={meeting.meeting_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline break-all"
-                >
-                  {meeting.meeting_link}
-                </a>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-sm text-gray-500">회의 링크</span>
+                    <a
+                      href={meeting.meeting_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-primary hover:underline break-all"
+                    >
+                      {meeting.meeting_link}
+                    </a>
+                  </div>
+                  {meeting.meeting_password && (
+                    <div>
+                      <span className="text-sm text-gray-500">비밀번호</span>
+                      <p className="font-mono text-lg font-semibold text-blue-800">{meeting.meeting_password}</p>
+                    </div>
+                  )}
+                </div>
                 {canManage && (
                   <div className="flex gap-2 mt-4 pt-4 border-t border-blue-200">
                     <Button asChild variant="outline" size="sm">
@@ -264,14 +275,25 @@ export function MeetingDetail({ meeting, userId, isParticipant, isLeader }: Meet
               <CardContent className="pt-6">
                 <p className="text-green-800 font-medium mb-2">참가 신청이 완료되었습니다!</p>
                 <p className="text-sm text-gray-600 mb-4">모임 당일 아래 링크로 입장해주세요.</p>
-                <a
-                  href={meeting.meeting_link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline break-all"
-                >
-                  {meeting.meeting_link}
-                </a>
+                <div className="space-y-2">
+                  <div>
+                    <span className="text-sm text-gray-500">회의 링크</span>
+                    <a
+                      href={meeting.meeting_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-primary hover:underline break-all"
+                    >
+                      {meeting.meeting_link}
+                    </a>
+                  </div>
+                  {meeting.meeting_password && (
+                    <div>
+                      <span className="text-sm text-gray-500">비밀번호</span>
+                      <p className="font-mono text-lg font-semibold text-green-800">{meeting.meeting_password}</p>
+                    </div>
+                  )}
+                </div>
                 <div className="mt-4">
                   <Button
                     variant="outline"
