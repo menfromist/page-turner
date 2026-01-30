@@ -2,10 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { createClient } from '@/lib/supabase/client';
 import type { Meeting } from '@/types/database';
 
@@ -20,7 +29,36 @@ export function MeetingDetail({ meeting, userId, isParticipant, isLeader }: Meet
   const router = useRouter();
   const [isJoined, setIsJoined] = useState(isParticipant);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const canManage = isLeader && meeting.status !== 'cancelled' && meeting.status !== 'completed';
+
+  const handleCancelMeeting = async () => {
+    if (!userId || !isLeader) return;
+
+    setIsCancelling(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('meetings')
+      .update({ status: 'cancelled' } as never)
+      .eq('id', meeting.id)
+      .eq('leader_id', userId);
+
+    if (error) {
+      setError('모임 취소에 실패했습니다. 다시 시도해주세요.');
+      setIsCancelling(false);
+      setCancelDialogOpen(false);
+      return;
+    }
+
+    setCancelDialogOpen(false);
+    setIsCancelling(false);
+    router.refresh();
+  };
 
   const meetingDate = new Date(meeting.meeting_date);
   const spotsLeft = meeting.max_participants - (meeting.participant_count ?? 0);
@@ -106,8 +144,8 @@ export function MeetingDetail({ meeting, userId, isParticipant, isLeader }: Meet
         <div className="md:col-span-2 space-y-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant={meeting.status === 'recruiting' ? 'default' : 'secondary'}>
-                {meeting.status === 'recruiting' ? '모집중' : '마감'}
+              <Badge variant={meeting.status === 'recruiting' ? 'default' : meeting.status === 'cancelled' ? 'destructive' : 'secondary'}>
+                {meeting.status === 'recruiting' ? '모집중' : meeting.status === 'cancelled' ? '취소됨' : meeting.status === 'completed' ? '완료' : '마감'}
               </Badge>
               {isLeader && (
                 <Badge variant="outline">내가 개설한 모임</Badge>
@@ -185,7 +223,14 @@ export function MeetingDetail({ meeting, userId, isParticipant, isLeader }: Meet
           )}
 
           {/* 참가 신청 버튼 또는 Zoom 링크 */}
-          {isLeader ? (
+          {meeting.status === 'cancelled' ? (
+            <Card className="border-red-200 bg-red-50">
+              <CardContent className="pt-6">
+                <p className="text-red-800 font-medium mb-2">이 모임은 취소되었습니다</p>
+                <p className="text-sm text-gray-600">모임 리더에 의해 취소된 모임입니다.</p>
+              </CardContent>
+            </Card>
+          ) : isLeader ? (
             <Card className="border-blue-200 bg-blue-50">
               <CardContent className="pt-6">
                 <p className="text-blue-800 font-medium mb-2">내가 개설한 모임입니다</p>
@@ -198,6 +243,20 @@ export function MeetingDetail({ meeting, userId, isParticipant, isLeader }: Meet
                 >
                   {meeting.meeting_link}
                 </a>
+                {canManage && (
+                  <div className="flex gap-2 mt-4 pt-4 border-t border-blue-200">
+                    <Button asChild variant="outline" size="sm">
+                      <Link href={`/meetings/${meeting.id}/edit`}>모임 수정하기</Link>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setCancelDialogOpen(true)}
+                    >
+                      모임 취소하기
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ) : isJoined ? (
@@ -257,6 +316,34 @@ export function MeetingDetail({ meeting, userId, isParticipant, isLeader }: Meet
           </CardContent>
         </Card>
       )}
+
+      {/* 모임 취소 확인 다이얼로그 */}
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>모임을 취소하시겠습니까?</DialogTitle>
+            <DialogDescription>
+              모임을 취소하면 참가자들에게 알림이 전달되며, 이 작업은 되돌릴 수 없습니다.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCancelDialogOpen(false)}
+              disabled={isCancelling}
+            >
+              돌아가기
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelMeeting}
+              disabled={isCancelling}
+            >
+              {isCancelling ? '취소 중...' : '모임 취소하기'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
